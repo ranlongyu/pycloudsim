@@ -8,66 +8,74 @@ from util.fileio import FileIo
 from ddpg.DDPG_model_v1 import DDPG
 import random
 
-cloudletsNum = 50
-cloudletDim = 2
-vmsNum = 20
+tasksNum = 3
+taskDim = 3
+vmsNum = 8
 vmDim = 2
 
 
 # 创建集群
 def creat_cluster():
     cluster = Cluster()
-    for i in range(5):
-        cluster.add_machine(Machine(mips=2000, ram=1024, disk=1024))  # 构建虚拟机
-    for i in range(5):
-        cluster.add_machine(Machine(mips=1000, ram=1024, disk=1024))
-    for i in range(5):
-        cluster.add_machine(Machine(mips=500, ram=1024, disk=1024))
-    for i in range(5):
-        cluster.add_machine(Machine(mips=250, ram=1024, disk=1024))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=500, speed=300, micost=1))  # 构建虚拟机
+    for i in range(2):
+        cluster.add_machine(Machine(mips=400, speed=300, micost=1))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=300, speed=300, micost=1))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=200, speed=300, micost=1))
     return cluster
 
 
 # 通过任务和机器获取状态
 def get_state(tasks_list, machines):
-    tasks_state = [0] * cloudletDim * cloudletsNum
+    tasks_state = [0] * taskDim * tasksNum
     for i, task in enumerate(tasks_list):
-        tasks_state[cloudletDim * i] = task.mi
-        tasks_state[cloudletDim * i + 1] = task.cpu_utilization_ratio
+        tasks_state[taskDim * i] = task.mi
+        tasks_state[taskDim * i + 1] = task.cpu_utilization
+        tasks_state[taskDim * i + 2] = task.data_size / machines[0].speed
     start_time = tasks_list[0].start_time  # 当前批次任务的开始时间
     machines_state = []
-    leisure_machines_id = []  # 存储空闲机器的id+1
+    leisure_machines_id = []  # 存储空闲机器的id
     for machine in machines:
         machines_state.append(machine.mips)
         machines_state.append(max(machine.next_start_time - start_time, 0))  # 等待时间
         if machine.next_start_time <= start_time:  # 表示当前时刻机器空闲
-            leisure_machines_id.append(machine.id + 1)
-    # 对空闲主机进行计算力的加权
-    add_machines_id = []
-    for id in leisure_machines_id:
-        if id < 6:
-            add_machines_id += [id, id, id, id]
-        elif id < 11:
-            add_machines_id += [id, id]
-        elif id < 16:
-            add_machines_id += [id]
-    leisure_machines_id += add_machines_id
+            leisure_machines_id.append(machine.id)
+
+    # 使用机器的mips作为概率权重，对所有机器采样
+    machines_weight_value = [m.mips for m in machines]
+    machines_weight_pro = np.array([i / sum(machines_weight_value) for i in machines_weight_value])
+    new_leisure_machines_id_first = np.random.choice([i for i in range(len(machines))], size=len(leisure_machines_id),
+                                                     replace=True,
+                                                     p=machines_weight_pro.ravel()).tolist()  # replace又放回取，size次数
+    # 对空闲机器采用
+    machines_weight_value = [machines[id].mips for id in leisure_machines_id]
+    machines_weight_pro = np.array([i / sum(machines_weight_value) for i in machines_weight_value])
+    new_leisure_machines_id_second = np.random.choice(leisure_machines_id, size=len(leisure_machines_id),
+                                                      replace=True,
+                                                      p=machines_weight_pro.ravel()).tolist()  # replace又放回取，size次数
+    leisure_machines_id = new_leisure_machines_id_first + new_leisure_machines_id_second
     random.shuffle(leisure_machines_id)  # 打乱
 
-    return tasks_state + machines_state, leisure_machines_id
+    # 本实验中用0填充了一些无效动作，虚拟机编号从1开始，所以需要统一加1
+    leisure_machines_id_plus = [i + 1 for i in leisure_machines_id]
+
+    return tasks_state + machines_state, leisure_machines_id_plus
 
 
 if __name__ == '__main__':
     start_time = time.time()
     cluster = creat_cluster()
-    all_batch_tasks = FileIo("data/create/create_tasks_8.txt").readAllBatchLines()
+    all_batch_tasks = FileIo("data/create/create_tasks_6.txt").readAllBatchLines()
     print("环境创建成功！")
 
-    state_all = []  # 存储所有的状态 [None,2*50+2*20]
-    action_all = []  # 存储所有的动作 [None,50]
-    reward_all = []  # 存储所有的奖励 [None,1]
+    state_all = []  # 存储所有的状态 [None, tasksNum*taskDim+vmsNum*vmDim]
+    action_all = []  # 存储所有的动作 [None, vmsNum]
+    reward_all = []  # 存储所有的奖励 [None, 1]
 
-    DRL = DDPG(cloudletsNum, cloudletDim, vmsNum, vmDim)
+    DRL = DDPG(tasksNum, taskDim, vmsNum, vmDim)
     print("网络初始化成功！")
 
     for step, batch_tasks in enumerate(all_batch_tasks):
@@ -75,35 +83,34 @@ if __name__ == '__main__':
         for task in batch_tasks:
             tasks_list.append(Task(task[0], task[1], task[2], task[3]))  # 构建任务
 
-        state, leisure_machines_id = get_state(tasks_list, cluster.machines)
+        state, leisure_machines_id_plus = get_state(tasks_list, cluster.machines)
         state_all.append(state)
-        machines_id = DRL.choose_action(np.array(state), len(tasks_list), leisure_machines_id)  # 通过调度算法得到分配 id
-        machines_id = (machines_id - 1).astype(int).tolist()
-        cluster.submit_tasks(tasks_list, machines_id)  # 提交任务到集群，并调度到虚拟机进行计算
 
-        action = [-1] * cloudletsNum
-        reward = []
-        for i, task in enumerate(cluster.finished_tasks[-len(tasks_list):]):  # 便历新提交的一批任务，记录动作和奖励
-            action[i] = task.task_machine_id
-            reward.append(task.task_response_time)
-        action_all.append(action)
+        machines_id_pluse = DRL.choose_action(np.array(state), len(tasks_list), leisure_machines_id_plus)  # 通过调度算法得到动作
+        machines_id = (machines_id_pluse - 1).astype(int).tolist()
+        cluster.submit_tasks(tasks_list, machines_id)  # 提交任务到集群，并调度到虚拟机进行计算
+        action_all.append(machines_id_pluse)
+
+        # 便历刚刚提交的一批任务，记录动作和奖励
+        reward = [task.task_response_time / task.mi for task in cluster.finished_tasks[-len(tasks_list):]]
         reward_all.append([sum(reward) / len(reward)])
 
-        # 先学习一些经验，再学习
+        # 减少存储数据量
+        if len(state_all) > 10000:
+            state_all = state_all[-5000:]
+            action_all = action_all[-5000:]
+            reward_all = reward_all[-5000:]
+
+        # 先存储一些经验，再学习
         if (step > 400):
             # 截取最后1000条记录
-            new_state = np.array(state_all, dtype=np.float32)[-1000:-1]
-            new_action = np.array(action_all, dtype=np.float32)[-1000:-1]
-            new_reward = np.array(reward_all, dtype=np.float32)[-1000:-1]
+            new_state = np.array(state_all, dtype=np.float32)[-5000:-1]
+            new_action = np.array(action_all, dtype=np.float32)[-5000:-1]
+            new_reward = np.array(reward_all, dtype=np.float32)[-5000:-1]
 
-            # 将状态、动作、奖励的后1000个存入记忆库，重复训练2轮
-            # for i in range(2):
-            #    DRL.store_memory(new_state, new_action, new_reward)
-            #    DRL.learn(False)
             DRL.store_memory(new_state, new_action, new_reward)
             DRL.step = step
-            # DRL.other_learn1()  # 人工经验
-            loss = DRL.learn(True)
+            loss = DRL.learn()
             if (step % 1000 == 0):
                 print("程序运行时间：%.8s s" % (time.time() - start_time))
                 print("step:", step)
@@ -113,9 +120,9 @@ if __name__ == '__main__':
 
         # if (step > 1000):  # test
         #    break
-
+    DRL.writer.close()
     finished_tasks = []
     for task in cluster.finished_tasks:
         finished_tasks.append(task.feature)
-    FileIo("result/create/finished_tasks_ddpg_8.txt").twoListToFile(finished_tasks, "w")
+    FileIo("result/create/finished_tasks_ddpg_6.txt").twoListToFile(finished_tasks, "w")
     print("Good job!")
