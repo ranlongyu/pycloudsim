@@ -63,7 +63,7 @@ def get_state(tasks_list, machines):
 if __name__ == '__main__':
     start_time = time.time()
     cluster = creat_cluster()
-    all_batch_tasks = FileIo("data/real/test_large_instance.txt").readAllBatchLines()
+    all_batch_tasks = FileIo("../../data/real/test_large_instance.txt").readAllBatchLines()
     print("环境创建成功！")
 
     state_all = []  # 存储所有的状态 [None,2*100+2*100]
@@ -119,5 +119,5 @@ if __name__ == '__main__':
     finished_tasks = []
     for task in cluster.finished_tasks:
         finished_tasks.append(task.feature)
-    FileIo("result/real/finished_tasks_ddpg_large.txt").twoListToFile(finished_tasks, "w")
+    FileIo("../../result/real/finished_tasks_ddpg_large.txt").twoListToFile(finished_tasks, "w")
     print("Good job!")

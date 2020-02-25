@@ -9,7 +9,6 @@ from torch.autograd import Variable
 GAMMA = 0.8  # reward discount
 TAU = 0.01  # soft replacement
 
-
 class DDPG(object):
     # 每次把tasks个任务分配给vms个虚拟机
     def __init__(self, tasks_num, task_dim, vms_num, vm_dim):

@@ -8,10 +8,15 @@ from util.fileio import FileIo
 from ddpg.DDPG_model_v1 import DDPG
 import random
 
+MULTI_DC = False  # 是否为多数据中心
+alpha = 100  # 多数据中心，计算虚拟机权重时micost权重调节因子
+beta = 0.1  # 多数据中心，计算虚拟机权重时speed权重调节因子
+gamma = 0.01  # 多数据中心，计算奖励时成本的权重调节因子
+
 tasksNum = 3
 taskDim = 3
 vmsNum = 8
-vmDim = 2
+vmDim = 4 if MULTI_DC else 2
 
 
 # 创建集群
@@ -41,11 +46,17 @@ def get_state(tasks_list, machines):
     for machine in machines:
         machines_state.append(machine.mips)
         machines_state.append(max(machine.next_start_time - start_time, 0))  # 等待时间
+        if MULTI_DC:
+            machines_state.append(machine.speed)
+            machines_state.append(machine.micost)
         if machine.next_start_time <= start_time:  # 表示当前时刻机器空闲
             leisure_machines_id.append(machine.id)
 
     # 使用机器的mips作为概率权重，对所有机器采样
-    machines_weight_value = [m.mips for m in machines]
+    if MULTI_DC:
+        machines_weight_value = [m.mips - alpha * m.micost + beta * m.speed for m in machines]
+    else:
+        machines_weight_value = [m.mips for m in machines]
     machines_weight_pro = np.array([i / sum(machines_weight_value) for i in machines_weight_value])
     new_leisure_machines_id_first = np.random.choice([i for i in range(len(machines))], size=len(leisure_machines_id),
                                                      replace=True,
@@ -92,7 +103,12 @@ if __name__ == '__main__':
         action_all.append(machines_id_pluse)
 
         # 便历刚刚提交的一批任务，记录动作和奖励
-        reward = [task.task_response_time / task.mi for task in cluster.finished_tasks[-len(tasks_list):]]
+        if MULTI_DC:
+            reward = [
+                (task.task_response_time / task.mi + gamma * task.mi * cluster.machines[task.task_machine_id].micost)
+                for task in cluster.finished_tasks[-len(tasks_list):]]
+        else:
+            reward = [task.task_response_time / task.mi for task in cluster.finished_tasks[-len(tasks_list):]]
         reward_all.append([sum(reward) / len(reward)])
 
         # 减少存储数据量

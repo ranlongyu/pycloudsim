@@ -8,29 +8,30 @@ from core.scheduler import Round_robin_scheduler
 
 
 # 创建集群
+# 创建集群
 def creat_cluster():
     cluster = Cluster()
-    for i in range(5):
-        cluster.add_machine(Machine(mips=2000, ram=1024, disk=1024))  # 构建虚拟机
-    for i in range(5):
-        cluster.add_machine(Machine(mips=1000, ram=1024, disk=1024))
-    for i in range(5):
-        cluster.add_machine(Machine(mips=500, ram=1024, disk=1024))
-    for i in range(5):
-        cluster.add_machine(Machine(mips=250, ram=1024, disk=1024))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=500, speed=300, micost=1))  # 构建虚拟机
+    for i in range(2):
+        cluster.add_machine(Machine(mips=400, speed=300, micost=1))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=300, speed=300, micost=1))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=200, speed=300, micost=1))
     return cluster
 
 # 创建大集群
 def creat_cluster_large():
     cluster = Cluster()
-    for i in range(25):
-        cluster.add_machine(Machine(mips=2000, ram=1024, disk=1024))  # 构建虚拟机
-    for i in range(25):
-        cluster.add_machine(Machine(mips=1000, ram=1024, disk=1024))
-    for i in range(25):
-        cluster.add_machine(Machine(mips=500, ram=1024, disk=1024))
-    for i in range(25):
-        cluster.add_machine(Machine(mips=250, ram=1024, disk=1024))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=500, speed=300, micost=1))  # 构建虚拟机
+    for i in range(2):
+        cluster.add_machine(Machine(mips=400, speed=300, micost=1))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=300, speed=300, micost=1))
+    for i in range(2):
+        cluster.add_machine(Machine(mips=200, speed=300, micost=1))
     return cluster
 
 if __name__ == '__main__':
