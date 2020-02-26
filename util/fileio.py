@@ -40,35 +40,6 @@ class FileIo:
             batch_lines.append(lines)
             return batch_lines
 
-    # 读取文件第一行，获取其元素个数
-    def readLineSum(self):
-        with open(self.fileName) as fileObject:
-            line = fileObject.readline()
-            line_list = line.rstrip().split(',')
-            return len(line_list)
-
-    # 读取文件第一行前task_num个元素，是一个[None,1]列表，存入lines中
-    def readQLine(self, lines):
-        with open(self.fileName, 'r') as fileObject:
-            line = fileObject.readline()
-            line_list = line.rstrip().split(',')
-            for value in line_list:
-                lines.append(float(value))
-            return lines
-
-    # 读取state文件第一行，共task_num个任务，是一个[None,cloudletDim+vmsNum*vmDim]列表，存入lines中
-    def readQSLine(self, state_all, task_num, cloudletDim=2, vmsNum=20, vmDim=2):
-        with open(self.fileName, 'r') as fileObject:
-            line = fileObject.readline()
-            line_list = line.rstrip().split(',')
-            vmState = line_list[-vmsNum * vmDim:]
-            for i in range(task_num):
-                state = line_list[i * cloudletDim:i * cloudletDim + 2] + vmState
-                # print(state)
-                state = list(map(float, state))  # 变换类型
-                state_all.append(state)
-            return state_all
-
     # 一维数组写入文件
     def listToFile(self, li, wora):  # wora:'w','a'
         with open(self.fileName, wora) as fileObject:
@@ -89,6 +60,11 @@ class FileIo:
         with open(self.fileName, wora) as fileObject:
             for key, val in di.items():
                 fileObject.write(str(key) + "," + str(val) + "\n")
+
+    # 字符串写入文件
+    def strToFile(self, s, wora):
+        with open(self.fileName, wora) as fileObject:
+            fileObject.write(str(s) + "\n")
 
     # 删除文件所有内容
     def deleteAllLines(self):

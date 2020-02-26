@@ -93,7 +93,7 @@ class DDPG(object):
         for i in range(s_task_num):
             if adict[action[i]] > int(
                     s_task_num / self.vms_num) and np.random.uniform() < 0.5:  # 如果VM被分配的任务个数大于2，按后面的概率随机给任务分配VM
-                # action[i] = random.randint(1, self.vms_num+1)  # randint范围: [,)
+                # action[i] = random.randint(1, self.vms_num)  # randint范围: [,]
                 action[i] = random.choice(leisure_machines_id_plus)  # 从空闲主机中随机选择一个
         # print("最终动作：", action)
         return action

@@ -6,26 +6,15 @@ from core.task import Task
 from core.cluster import Cluster
 from util.fileio import FileIo
 from dqn.DQN_model_v1 import DQN
+from base_utilize import *
 import random
 
 taskDim = 3
 vmsNum = 8
 vmDim = 2
 
-
-# 创建集群
-def creat_cluster():
-    cluster = Cluster()
-    for i in range(2):
-        cluster.add_machine(Machine(mips=500, speed=300, micost=1))  # 构建虚拟机
-    for i in range(2):
-        cluster.add_machine(Machine(mips=400, speed=300, micost=1))
-    for i in range(2):
-        cluster.add_machine(Machine(mips=300, speed=300, micost=1))
-    for i in range(2):
-        cluster.add_machine(Machine(mips=200, speed=300, micost=1))
-    return cluster
-
+filepath_input = "data/create/create_tasks_6.txt"
+filepath_output = "result/create/finished_tasks_dqn_6.txt"
 
 # 通过任务和机器获取状态
 def get_state(tasks_list, machines):
@@ -48,7 +37,7 @@ def get_state(tasks_list, machines):
 if __name__ == '__main__':
     start_time = time.time()
     cluster = creat_cluster()
-    all_batch_tasks = FileIo("data/create/create_tasks_6.txt").readAllBatchLines()
+    all_batch_tasks = FileIo(filepath_input).readAllBatchLines()
     print("环境创建成功！")
 
     state_all = []  # 存储所有的状态 [None,2+2*20]
@@ -93,5 +82,5 @@ if __name__ == '__main__':
     finished_tasks = []
     for task in cluster.finished_tasks:
         finished_tasks.append(task.feature)
-    FileIo("result/create/finished_tasks_dqn_6.txt").twoListToFile(finished_tasks, "w")
+    FileIo(filepath_output).twoListToFile(finished_tasks, "w")
     print("Good job!")
