@@ -5,6 +5,6 @@
 *.ipr
 
 ### Others ###
+**/__pycache__
+*.txt
 test.py
-data
-result
