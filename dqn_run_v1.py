@@ -1,20 +1,11 @@
 import numpy as np
 import time
 
-from core.machine import Machine
 from core.task import Task
-from core.cluster import Cluster
 from util.fileio import FileIo
 from dqn.DQN_model_v1 import DQN
 from base_utilize import *
-import random
 
-taskDim = 3
-vmsNum = 8
-vmDim = 2
-
-filepath_input = "data/create/create_tasks_6.txt"
-filepath_output = "result/create/finished_tasks_dqn_6.txt"
 
 # 通过任务和机器获取状态
 def get_state(tasks_list, machines):
@@ -34,9 +25,8 @@ def get_state(tasks_list, machines):
     return tasks_state
 
 
-if __name__ == '__main__':
-    start_time = time.time()
-    cluster = creat_cluster()
+def main(taskDim, vmDim, cluster, filepath_input, filepath_output):
+    vmsNum = len(cluster.machines)
     all_batch_tasks = FileIo(filepath_input).readAllBatchLines()
     print("环境创建成功！")
 
@@ -83,4 +73,17 @@ if __name__ == '__main__':
     for task in cluster.finished_tasks:
         finished_tasks.append(task.feature)
     FileIo(filepath_output).twoListToFile(finished_tasks, "w")
-    print("Good job!")
+
+if __name__ == '__main__':
+    start_time = time.time()
+    taskDim = 3
+    vmDim = 2
+    cluster = creat_cluster()
+
+    txtname = ["3", "5", "7", "9"]  # "1", "3", "5", "7", "9"
+    for name in txtname:
+        filepath_input = "data/create/create_tasks_"+ name +".txt"
+        filepath_output = "result/create/finished_tasks_dqn_"+ name +".txt"
+        main(taskDim, vmDim, cluster, filepath_input, filepath_output)
+        cluster.reboot()  # 结束之后重启，开始下一轮仿真
+        print("完成:"+filepath_output)

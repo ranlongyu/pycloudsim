@@ -15,3 +15,8 @@ class Cluster(object):
         for task, machine_id in zip(tasks_list, machines_id):
             task.set_machine(self.machines[machine_id])  # 任务分配给机器执行
             self.finished_tasks.append(task)
+
+    def reboot(self):  # 重启集群
+        self.finished_tasks = []
+        for i in range(len(self.machines)):
+            self.machines[i].reboot()

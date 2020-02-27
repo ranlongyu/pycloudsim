@@ -16,7 +16,6 @@ gamma = 0.01  # 多数据中心，计算奖励时成本的权重调节因子
 
 tasksNum = 3
 taskDim = 3
-vmsNum = 8
 vmDim = 4 if MULTI_DC else 2
 
 filepath_input = "data/create/create_tasks_6.txt"
@@ -69,6 +68,7 @@ def get_state(tasks_list, machines):
 if __name__ == '__main__':
     start_time = time.time()
     cluster = creat_cluster()
+    vmsNum = len(cluster.machines)
     all_batch_tasks = FileIo(filepath_input).readAllBatchLines()
     print("环境创建成功！")
 

@@ -5,7 +5,9 @@ from core.machine import Machine
 def creat_cluster():
     cluster = Cluster()
     for i in range(2):
-        cluster.add_machine(Machine(mips=500, speed=300, micost=1))  # 构建虚拟机
+        cluster.add_machine(Machine(mips=600, speed=300, micost=1))  # 构建虚拟机
+    for i in range(2):
+        cluster.add_machine(Machine(mips=500, speed=300, micost=1))
     for i in range(2):
         cluster.add_machine(Machine(mips=400, speed=300, micost=1))
     for i in range(2):

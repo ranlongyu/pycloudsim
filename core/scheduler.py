@@ -55,11 +55,9 @@ class Earliest_scheduler():
             if machine.next_start_time <= current_time:  # 表示当前时刻机器空闲
                 leisure_machines_id.append(machine.id)
         machines_id = []
-        if leisure_machines_id:  # 如果有空闲机器
-            # 对空闲机器分配任务
-            for i in range(len_tasks_list):
-                machines_id.append(random.choice(leisure_machines_id))  # 随机取值
-        else:
-            for i in range(len_tasks_list):
-                machines_id.append(random.randint(0, self.len_machines_list - 1))
+        for i in range(len_tasks_list):
+            if leisure_machines_id:  # 如果有空闲机，对空闲机器分配任务
+                machines_id.append(random.choice(leisure_machines_id))
+            else:
+                machines_id.append(random.randint(0, self.len_machines_list - 1))  # 随机取值
         return machines_id

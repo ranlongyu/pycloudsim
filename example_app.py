@@ -7,22 +7,16 @@ from core.scheduler import Random_scheduler
 from core.scheduler import Round_robin_scheduler
 from base_utilize import *
 
-# "random" "earliest" "rr"
-scheduler = "random"
 
-filepath_input = "data/create/create_tasks_6.txt"
-filepath_output = "result/create/finished_tasks_" + scheduler +"_6.txt"
-
-if __name__ == '__main__':
-    cluster = creat_cluster_large()
+def example(cluster, scheduler, filepath_input, filepath_output):
     all_batch_tasks = FileIo(filepath_input).readAllBatchLines()
 
     # 调度器初始化
-    if scheduler=="random":
+    if scheduler == "random":
         my_scheduler = Random_scheduler(len(cluster.machines))
-    elif scheduler=="earliest":
+    elif scheduler == "earliest":
         my_scheduler = Earliest_scheduler(len(cluster.machines))
-    elif scheduler=="rr":
+    elif scheduler == "rr":
         my_scheduler = Round_robin_scheduler(len(cluster.machines))
 
     for batch_tasks in all_batch_tasks:
@@ -43,4 +37,16 @@ if __name__ == '__main__':
     for task in cluster.finished_tasks:
         finished_tasks.append(task.feature)
     FileIo(filepath_output).twoListToFile(finished_tasks, "w")
-    print("Good job!")
+
+
+if __name__ == '__main__':
+    scheduler_li = ["random", "earliest", "rr"]
+    txtname = ["1", "3", "5", "7", "9"]
+    cluster = creat_cluster()
+    for scheduler in scheduler_li:
+        for name in txtname:
+            filepath_input = "data/create/create_tasks_" + name + ".txt"
+            filepath_output = "result/create/finished_tasks_" + scheduler + "_" + name + ".txt"
+            example(cluster, scheduler, filepath_input, filepath_output)
+            cluster.reboot()  # 结束之后重启，开始下一轮仿真
+            print(scheduler + ":" + name)

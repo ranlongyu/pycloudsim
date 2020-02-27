@@ -5,7 +5,7 @@ from torch.autograd import Variable
 import numpy as np
 import shutil
 
-GAMMA = 0.6  # reward discount
+GAMMA = 0.7  # reward discount
 TARGET_REPLACE_ITER = 50  # target update frequency
 
 
@@ -95,7 +95,7 @@ class DQN(object):
         self.optimizer.step()
 
         # 画图
-        if self.step % 5 == 0:
+        if self.step % 10 == 0:
             self.writer.add_scalar('Q-value', q_eval.detach().numpy()[0], self.step)
             self.writer.add_scalar('Loss', loss.detach().numpy(), self.step)
 
@@ -135,25 +135,25 @@ class QNet_v1(nn.Module):  # 通过 s 预测出 a
             nn.LeakyReLU(),
         )
         self.layer1_1vm = nn.Sequential(  # 处理虚拟机状态
-            nn.Linear(self.s_vm_dim, 64),
+            nn.Linear(self.s_vm_dim, 32),
             torch.nn.Dropout(0.2),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(32),
             nn.LeakyReLU(),
         )
         self.layer1_2vm = nn.Sequential(
-            nn.Linear(64, 32),
+            nn.Linear(32, 16),
             torch.nn.Dropout(0.2),
-            nn.BatchNorm1d(32),
+            nn.BatchNorm1d(16),
             nn.LeakyReLU(),
         )
         self.layer2 = nn.Sequential(  # 融合处理结果
-            nn.Linear(48, 32),
-            torch.nn.Dropout(0.3),
-            nn.BatchNorm1d(32),
+            nn.Linear(32, 16),
+            torch.nn.Dropout(0.2),
+            nn.BatchNorm1d(16),
             nn.LeakyReLU(),
         )
         self.layer3 = nn.Sequential(
-            nn.Linear(32, a_dim)
+            nn.Linear(16, a_dim)
         )
 
     def forward(self, x):

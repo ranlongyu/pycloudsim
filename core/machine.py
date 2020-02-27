@@ -21,6 +21,9 @@ class Machine:
         task_cost = self.micost * task_instance.mi  # 运行任务的成本
         return task_response_time, task_cost, task_run_time
 
+    def reboot(self):  # 重启虚拟机
+        self.next_start_time = 0
+
     @property
     def feature(self):
         return [self.id, self.mips, self.speed, self.micost]

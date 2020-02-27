@@ -19,13 +19,8 @@ class machine_load():
             self.time += self.time_interval
             self.load.append(cpu_utilization)
 
-vmsNum = 8
-interval = 500  # 每500时间段计算一次值，比如1~499为第一段，500~999为第二段
 
-file_input = "create/finished_tasks_dqn_6.txt"
-file_output = "analyze_result.txt"
-
-if __name__ == '__main__':
+def main(vmsNum, interval, file_input, file_output):
     # 读取结果数据，task future
     result = []
     result = FileIo(file_input).readAllLines(result)
@@ -90,7 +85,7 @@ if __name__ == '__main__':
     cpu_std_li = np.std(total_cpu_utilization, ddof=1, axis=0)  # ddof表示无偏估计，axis=0表示求列的标准差
     cpu_std_avg_li = []  # cpu利用率标准差的分时段平均值
     for i in range(math.ceil(len(cpu_std_li) / (2 * interval))):
-        cpu_std_avg_li.append(round(np.mean(cpu_std_li[i*2*interval : (i+1)*2*interval]), 3))
+        cpu_std_avg_li.append(round(np.mean(cpu_std_li[i * 2 * interval: (i + 1) * 2 * interval]), 3))
 
     print("机器cpu利用率标准差分时段平均值：", cpu_std_avg_li)
     print("机器cpu利用率:", cpu_utilization)
@@ -99,3 +94,19 @@ if __name__ == '__main__':
     analyze_result.strToFile("机器cpu利用率：" + str(cpu_utilization), 'a')
     analyze_result.strToFile("机器完成任务数：" + str(machines_task_num) + "\n", 'a')
 
+
+if __name__ == '__main__':
+    vmsNum = 10
+    interval = 500  # 每500时间段计算一次值，比如1~499为第一段，500~999为第二段
+
+    file_output = "analyze_result.txt"
+
+    scheduler_li = ["random", "earliest", "rr", "dqn"]  # "random", "earliest", "rr", "dqn", "ddpg"
+    txtname = ["1"]  # "1", "3", "5", "7", "9"
+
+    for scheduler in scheduler_li:
+        for name in txtname:
+            # random earliest rr dqn ddpg
+            file_input = "create/finished_tasks_" + scheduler + "_" + name + ".txt"
+            main(vmsNum, interval, file_input, file_output)
+            print(scheduler + ":" + name)
