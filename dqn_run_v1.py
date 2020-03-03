@@ -80,7 +80,7 @@ if __name__ == '__main__':
     vmDim = 2
     cluster = creat_cluster()
 
-    txtname = ["3", "5", "7", "9"]  # "1", "3", "5", "7", "9"
+    txtname = ["2"]  # "1", "3", "5", "7", "9"
     for name in txtname:
         filepath_input = "data/create/create_tasks_"+ name +".txt"
         filepath_output = "result/create/finished_tasks_dqn_"+ name +".txt"

@@ -34,7 +34,8 @@ def create_tasks(poisson_lam):
 
 
 if __name__ == '__main__':
-    for i in range(1, 10, 2):
+    poisson_lam_li = [2]  # 1, 3, 5, 7, 9
+    for i in poisson_lam_li:
         poisson_lam = i  # 表示平均每秒提交任务的个数
         all_tasks = create_tasks(poisson_lam)
         print("任务生成成功！")

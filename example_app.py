@@ -40,13 +40,13 @@ def example(cluster, scheduler, filepath_input, filepath_output):
 
 
 if __name__ == '__main__':
-    scheduler_li = ["random", "earliest", "rr"]
-    txtname = ["1", "3", "5", "7", "9"]
-    cluster = creat_cluster()
+    scheduler_li = ["random", "earliest", "rr"]  # "random", "earliest", "rr"
+    txtname = ["300"]  # "1", "3", "5", "7", "9", "300", "3000"
+    cluster = creat_cluster_large_multiple()
     for scheduler in scheduler_li:
         for name in txtname:
-            filepath_input = "data/create/create_tasks_" + name + ".txt"
-            filepath_output = "result/create/finished_tasks_" + scheduler + "_" + name + ".txt"
+            filepath_input = "data/real/real_tasks_" + name + "_1.txt"
+            filepath_output = "result/real/finished_tasks_" + scheduler + "_" + name + "_multiple.txt"
             example(cluster, scheduler, filepath_input, filepath_output)
             cluster.reboot()  # 结束之后重启，开始下一轮仿真
             print(scheduler + ":" + name)

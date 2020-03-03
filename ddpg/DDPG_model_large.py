@@ -28,7 +28,7 @@ class DDPG(object):
         self.batch_size = 16  # 128
         self.epsilon = 0.99
         self.epsilon_decay = 0.999
-        self.epsilon_min = 0.1
+        self.epsilon_min = 0.7
         self.step = 0
 
         self.Actor_eval = ANet(self.s_task_dim, self.s_vm_dim, self.a_dim)
@@ -93,7 +93,7 @@ class DDPG(object):
                 adict[action[i]] += 1
         for i in range(s_task_num):
             # 如果VM被分配的任务个数大于2，按后面的概率随机给任务分配VM
-            if adict[action[i]] > int(s_task_num / self.vms_num) and np.random.uniform() > self.epsilon:
+            if adict[action[i]] > int(s_task_num / self.vms_num): #and np.random.uniform() < 0.7:
                # action[i] = random.randint(1, self.vms_num)  # randint范围: [,]
                action[i] = random.choice(leisure_machines_id_plus)  # 从空闲主机中随机选择一个
         #print("最终动作：", action)
@@ -135,7 +135,7 @@ class DDPG(object):
         self.atrain.step()
 
         # 画图
-        if self.step % 100 == 0:
+        if self.step % 200 == 0:
             self.writer.add_scalar('Critic_Q_Loss', td_error.detach().numpy(), self.step)
             self.writer.add_scalar('Actor_loss', loss_a.detach().numpy(), self.step)
             self.writer.add_scalar('Actor_Q_Value', loss_b.detach().numpy(), self.step)
@@ -192,29 +192,29 @@ class ANet(nn.Module):  # 通过 s 预测出 a
         self.s_task_dim = s_task_dim
         self.s_vm_dim = s_vm_dim
         self.layer1_task = nn.Sequential(  # task状态的嵌入层
-            nn.Linear(s_task_dim, 64),
+            nn.Linear(s_task_dim, 256),
             # nn.BatchNorm1d(128),
             # nn.LeakyReLU(),
         )
         self.layer1_vm = nn.Sequential(  # vm状态的嵌入层
-            nn.Linear(s_vm_dim, 64),
+            nn.Linear(s_vm_dim, 128),
             # nn.BatchNorm1d(128),
             # nn.LeakyReLU(),
         )
         self.layer2 = nn.Sequential(
-            nn.Linear(64 * 2, 64),
+            nn.Linear(256+128, 256),
             # torch.nn.Dropout(0.1),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(256),
             nn.LeakyReLU(),
         )
         self.layer3 = nn.Sequential(
-            nn.Linear(64, 32),
+            nn.Linear(256, 128),
             # torch.nn.Dropout(0.1),
-            nn.BatchNorm1d(32),
+            nn.BatchNorm1d(128),
             nn.LeakyReLU(),
         )
         self.layer4 = nn.Sequential(
-            nn.Linear(32, a_dim),
+            nn.Linear(128, a_dim),
             #nn.ReLU(),
         )
 
@@ -232,24 +232,24 @@ class ANet(nn.Module):  # 通过 s 预测出 a
 class CNet(nn.Module):  # 通过 s,a 预测出 q
     def __init__(self, s_dim, a_dim):
         super(CNet, self).__init__()
-        self.ins = nn.Linear(s_dim, 64, bias=True)
-        self.ina = nn.Linear(a_dim, 64, bias=True)
+        self.ins = nn.Linear(s_dim, 256, bias=True)
+        self.ina = nn.Linear(a_dim, 128, bias=True)
         self.layer2 = nn.Sequential(
             # nn.BatchNorm1d(128*2),
             # nn.Tanh(),  # activate input
-            nn.Linear(128, 64),
+            nn.Linear(256+128, 256),
             torch.nn.Dropout(0.1),
-            nn.BatchNorm1d(64),
+            nn.BatchNorm1d(256),
             nn.LeakyReLU(),
         )
         self.layer3 = nn.Sequential(
-            nn.Linear(64, 32),
+            nn.Linear(256, 64),
             torch.nn.Dropout(0.1),
-            nn.BatchNorm1d(32),
+            nn.BatchNorm1d(64),
             nn.LeakyReLU()
         )
         self.layer4 = nn.Sequential(
-            nn.Linear(32, 1),
+            nn.Linear(64, 1),
         )
 
     def forward(self, s, a):

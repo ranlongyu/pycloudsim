@@ -96,17 +96,17 @@ def main(vmsNum, interval, file_input, file_output):
 
 
 if __name__ == '__main__':
-    vmsNum = 10
-    interval = 500  # 每500时间段计算一次值，比如1~499为第一段，500~999为第二段
+    vmsNum = 20
+    interval = 3600  # 每500时间段计算一次值，比如1~499为第一段，500~999为第二段
 
     file_output = "analyze_result.txt"
 
-    scheduler_li = ["random", "earliest", "rr", "dqn"]  # "random", "earliest", "rr", "dqn", "ddpg"
-    txtname = ["1"]  # "1", "3", "5", "7", "9"
+    scheduler_li = ["ddpg"]  # "random", "earliest", "rr", "dqn", "ddpg"
+    txtname = ["300"]  # "1", "3", "5", "7", "9", "300", "3000"
 
-    for scheduler in scheduler_li:
-        for name in txtname:
+    for name in txtname:
+        for scheduler in scheduler_li:
             # random earliest rr dqn ddpg
-            file_input = "create/finished_tasks_" + scheduler + "_" + name + ".txt"
+            file_input = "real/finished_tasks_" + scheduler + "_" + name + "_multiple.txt"
             main(vmsNum, interval, file_input, file_output)
             print(scheduler + ":" + name)
