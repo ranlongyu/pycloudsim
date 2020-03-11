@@ -76,6 +76,7 @@ def main(cluster, tasksNum, filepath_input, filepath_output):
 
     DRL = DDPG(tasksNum, taskDim, vmsNum, vmDim)
     print("网络初始化成功！")
+    exit()
 
     for step, batch_tasks in enumerate(all_batch_tasks):
         tasks_list = []

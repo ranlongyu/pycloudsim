@@ -6,6 +6,10 @@ import shutil
 import random
 from torch.autograd import Variable
 
+import torch
+from torch import nn
+from torchviz import make_dot
+
 GAMMA = 0.6  # reward discount
 TAU = 0.01  # soft replacement
 
@@ -58,6 +62,11 @@ class DDPG(object):
             w.add_graph(self.Actor_eval, (dummy_input_state))
         with SummaryWriter(logdir="ddpg/logs/Critic_net", comment="Critic_net") as w:
             w.add_graph(self.Critic_eval, (dummy_input_state, dummy_input_actor))
+
+        vis_graph = make_dot(self.Actor_eval(dummy_input_state), params=dict(self.Actor_eval.named_parameters()))
+        vis_graph.view()
+        vis_graph = make_dot(self.Critic_eval(dummy_input_state, dummy_input_actor), params=dict(self.Critic_eval.named_parameters()))
+        vis_graph.view()
 
     def choose_action(self, state, s_task_num, leisure_machines_id_plus):
         if self.epsilon > self.epsilon_min:  # epsilon最小值
